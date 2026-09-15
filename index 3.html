@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capital Budgeting Calculator</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --danger: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: var(--text-main);
+    }
+
+    input {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .cashflow-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+    }
+
+    .cashflow-table th, .cashflow-table td {
+      padding: 0.5rem;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    .cashflow-table th {
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 6px;
+      padding: 0.55rem 1rem;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background-color: #fff;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--bg);
+    }
+
+    .btn-danger {
+      background-color: transparent;
+      color: var(--danger);
+      border: none;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .results-card {
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .metric:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .metric-title {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .positive { color: var(--success); }
+    .negative { color: var(--danger); }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Capital Budgeting Calculator</h1>
+  <p class="subtitle">Evaluate project viability with Net Present Value, Internal Rate of Return, Payback, and PI.</p>
+
+  <div class="grid">
+    <!-- Left: Inputs -->
+    <div>
+      <div class="form-group">
+        <label for="initialOutlay">Initial Investment Outlay ($)</label>
+        <input type="number" id="initialOutlay" value="100000" min="0" step="any">
+      </div>
+
+      <div class="form-group">
+        <label for="discountRate">Discount Rate / Hurdle Rate (%)</label>
+        <input type="number" id="discountRate" value="10" min="0" max="100" step="0.1">
+      </div>
+
+      <label>Cash Inflows by Period</label>
+      <table class="cashflow-table" id="cashflowTable">
+        <thead>
+          <tr>
+            <th style="width: 25%;">Period</th>
+            <th>Expected Inflow ($)</th>
+            <th style="width: 10%;"></th>
+          </tr>
+        </thead>
+        <tbody id="cashflowBody">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="addPeriod()">+ Add Period</button>
+        <button class="btn-primary" onclick="calculate()">Calculate</button>
+      </div>
+    </div>
+
+    <!-- Right: Outputs -->
+    <div>
+      <h3 style="margin-bottom: 0.75rem; font-size: 1.1rem;">Decision Metrics</h3>
+      <div class="results-card">
+        <div class="metric">
+          <span class="metric-title">Net Present Value (NPV)</span>
+          <span class="metric-value" id="npvValue">-</span>
+        </div>
+        <div class="metric">
+          <span class="metric-title">Internal Rate of Return (IRR)</span>
+          <span class="metric-value" id="irrValue">-</span>
+        </div>
+        <div class="metric">
+          <span class="metric-title">Profitability Index (PI)</span>
+          <span class="metric-value" id="piValue">-</span>
+        </div>
+        <div class="metric">
+          <span class="metric-title">Simple Payback Period</span>
+          <span class="metric-value" id="paybackValue">-</span>
+        </div>
+        <div class="metric">
+          <span class="metric-title">Discounted Payback Period</span>
+          <span class="metric-value" id="discPaybackValue">-</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let defaultFlows = [30000, 35000, 40000, 30000, 20000];
+
+  function renderRows() {
+    const tbody = document.getElementById('cashflowBody');
+    tbody.innerHTML = '';
+    defaultFlows.forEach((flow, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>Year ${i + 1}</td>
+        <td><input type="number" class="cash-input" value="${flow}" step="any"></td>
+        <td><button class="btn-danger" onclick="removePeriod(${i})">✕</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function addPeriod() {
+    const inputs = document.querySelectorAll('.cash-input');
+    defaultFlows = Array.from(inputs).map(inp => Number(inp.value) || 0);
+    defaultFlows.push(0);
+    renderRows();
+  }
+
+  function removePeriod(index) {
+    const inputs = document.querySelectorAll('.cash-input');
+    defaultFlows = Array.from(inputs).map(inp => Number(inp.value) || 0);
+    defaultFlows.splice(index, 1);
+    renderRows();
+  }
+
+  function formatCurrency(val) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+  }
+
+  // Newton-Raphson approximation for IRR
+  function computeIRR(cfs, guess = 0.1) {
+    let rate = guess;
+    const maxIter = 1000;
+    const tol = 1e-7;
+
+    for (let i = 0; i < maxIter; i++) {
+      let npv = 0;
+      let dNpv = 0;
+      for (let t = 0; t < cfs.length; t++) {
+        const factor = Math.pow(1 + rate, t);
+        npv += cfs[t] / factor;
+        if (t > 0) {
+          dNpv -= (t * cfs[t]) / Math.pow(1 + rate, t + 1);
+        }
+      }
+
+      if (Math.abs(npv) < tol) return rate;
+      if (Math.abs(dNpv) < 1e-12) break; // Avoid division by near-zero slope
+
+      const newRate = rate - npv / dNpv;
+      if (Math.abs(newRate - rate) < tol) return newRate;
+      rate = newRate;
+    }
+    return null;
+  }
+
+  function calculate() {
+    const I0 = parseFloat(document.getElementById('initialOutlay').value) || 0;
+    const r = (parseFloat(document.getElementById('discountRate').value) || 0) / 100;
+    
+    const inputs = document.querySelectorAll('.cash-input');
+    const flows = Array.from(inputs).map(inp => parseFloat(inp.value) || 0);
+
+    // 1. NPV & PV of Inflows
+    let pvInflows = 0;
+    let discFlows = [];
+    flows.forEach((cf, idx) => {
+      const pv = cf / Math.pow(1 + r, idx + 1);
+      pvInflows += pv;
+      discFlows.push(pv);
+    });
+    const npv = pvInflows - I0;
+
+    // 2. IRR (Full sequence: Period 0 = -I0)
+    const fullCashFlows = [-I0, ...flows];
+    const irr = computeIRR(fullCashFlows);
+
+    // 3. Profitability Index
+    const pi = I0 > 0 ? (pvInflows / I0) : 0;
+
+    // 4. Simple Payback Period
+    let cumFlow = 0;
+    let payback = null;
+    for (let i = 0; i < flows.length; i++) {
+      const prev = cumFlow;
+      cumFlow += flows[i];
+      if (cumFlow >= I0) {
+        payback = i + (I0 - prev) / flows[i];
+        break;
+      }
+    }
+
+    // 5. Discounted Payback Period
+    let cumDiscFlow = 0;
+    let discPayback = null;
+    for (let i = 0; i < discFlows.length; i++) {
+      const prev = cumDiscFlow;
+      cumDiscFlow += discFlows[i];
+      if (cumDiscFlow >= I0) {
+        discPayback = i + (I0 - prev) / discFlows[i];
+        break;
+      }
+    }
+
+    // Update DOM
+    const npvEl = document.getElementById('npvValue');
+    npvEl.textContent = formatCurrency(npv);
+    npvEl.className = 'metric-value ' + (npv >= 0 ? 'positive' : 'negative');
+
+    const irrEl = document.getElementById('irrValue');
+    irrEl.textContent = irr !== null ? (irr * 100).toFixed(2) + '%' : 'N/A';
+    irrEl.className = 'metric-value ' + (irr !== null && irr >= r ? 'positive' : 'negative');
+
+    document.getElementById('piValue').textContent = pi.toFixed(3);
+    document.getElementById('paybackValue').textContent = payback !== null ? payback.toFixed(2) + ' Years' : 'Not recovered';
+    document.getElementById('discPaybackValue').textContent = discPayback !== null ? discPayback.toFixed(2) + ' Years' : 'Not recovered';
+  }
+
+  // Initial render
+  renderRows();
+  calculate();
+</script>
+
+</body>
+</html>
