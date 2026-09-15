@@ -1,2 +1,2 @@
 # Budgeting-calculator
-This is a budgeting calculator
+This is a demo budgeting calculator
